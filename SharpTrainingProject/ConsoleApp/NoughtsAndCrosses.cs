@@ -81,6 +81,20 @@ namespace ConsoleApp
             }
 
             /// <summary>
+            /// Возвращает список координат всех клеток, где ходил заданный игрок
+            /// </summary>
+            /// <param name="Mark">Символ игрока</param>
+            /// <returns></returns>
+            public List<(int,int)> GetAllMarksCoord(string Mark)
+            {
+                List<(int, int)> Coord = new List<(int, int)>();
+                for (int i = 0; i < PlayingField.GetLength(0); i++)
+                    for (int j = 0; j < PlayingField.GetLength(1); j++)
+                        if (PlayingField[i, j].CoordValue.Contains(Mark)) Coord.Add((i,j));
+                return Coord;
+            }
+
+            /// <summary>
             /// Игровая клетка
             /// </summary>
             struct Coordinate
@@ -165,18 +179,19 @@ namespace ConsoleApp
 
         static Player CurrentPlayer = new Player("None");
 
-        //static Coordinate[,] Field = new Coordinate[3, 3];
-
         static string Winner = "";
 
         static ConsoleKeyInfo PressedKey;
+
+        static List<(int, int)> WinningCoordinate;
 
         /// <summary>
         /// Запуск новой игры
         /// </summary>
         public static void StartGame()
         {
-            PlayingField.SetActiveCoordinate(0,0);
+            WinningCoordinate = new List<(int, int)>();
+            PlayingField.SetActiveCoordinate(0, 0);
             (int, int) ActiveCoordinate = (0, 0);
             //Определяем первого игрока
             {
@@ -188,6 +203,7 @@ namespace ConsoleApp
             //Пока не определён победитель, продолжать игру
             while (Winner == "")
             {
+                WinningCoordinate.Clear();
                 Console.Clear();
                 Console.WriteLine($"Сейчас ходит: {CurrentPlayer.PlayerValue}");
                 PlayingField.ShowField();
@@ -206,11 +222,37 @@ namespace ConsoleApp
                     case ConsoleKey.DownArrow:
                         if (PlayingField.GetActiveCoordinate().Item1 != 2)
                             PlayingField.SetActiveCoordinate(ActiveCoordinate.Item1 + 1, ActiveCoordinate.Item2); break;
-                    case ConsoleKey.Enter: 
-                        if (PlayingField.MarkCoordinate(CurrentPlayer.PlayerValue)) CurrentPlayer.ChangePlayer(); break;
+                    case ConsoleKey.Enter:
+                        if (PlayingField.MarkCoordinate(CurrentPlayer.PlayerValue))
+                        {
+                            //Определение победителя
+                            WinningCoordinate.AddRange(PlayingField.GetAllMarksCoord(CurrentPlayer.PlayerValue));
+                            for (int i = 0; i < 3; i++)
+                            {
+                                if (WinningCoordinate.FindAll(x => x.Item1 == i).Count == 3 ||
+                                    WinningCoordinate.FindAll(x => x.Item2 == i).Count == 3 ||
+                                    WinningCoordinate.FindAll(x => x.Item1 == x.Item2).Count == 3 ||
+                                        (WinningCoordinate.FindAll(x => x.Item1 == 2 && x.Item2 == 0).Count +
+                                        WinningCoordinate.FindAll(x => x.Item1 == 1 && x.Item2 == 1).Count +
+                                        WinningCoordinate.FindAll(x => x.Item1 == 0 && x.Item2 == 2).Count) == 3)
+                                { 
+                                    Winner = CurrentPlayer.PlayerValue;
+                                    break;
+                                }
+                            }
+                            //Смена игрока
+                            if (Winner == "") CurrentPlayer.ChangePlayer(); 
+                        } break;
                 }
                 ActiveCoordinate = PlayingField.GetActiveCoordinate();
+                //Если закончились свободные клетки, а победителя нет - конец игры
+                if (WinningCoordinate.Count == 5 && Winner == "") break;
             }
+            Console.Clear();
+            PlayingField.ShowField();
+            if (Winner != "")
+                Console.WriteLine($"Победил игрок {CurrentPlayer.PlayerValue}!");
+            else Console.WriteLine($"Ничья.");
         }
 
     }
