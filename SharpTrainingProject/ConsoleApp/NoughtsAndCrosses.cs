@@ -68,6 +68,19 @@ namespace ConsoleApp
             }
 
             /// <summary>
+            /// Отмечает в клетке ход игрока
+            /// </summary>
+            /// <param name="Mark">Метка игрока</param>
+            public bool MarkCoordinate(string Mark)
+            {
+                (int, int) Coord = GetActiveCoordinate();
+                PlayingField[Coord.Item1, Coord.Item2].CoordValue = $"|_{Mark}_|";
+                if (PlayingField[Coord.Item1, Coord.Item2].CoordValue.Contains(Mark))
+                    return true;
+                else return false;
+            }
+
+            /// <summary>
             /// Игровая клетка
             /// </summary>
             struct Coordinate
@@ -99,7 +112,10 @@ namespace ConsoleApp
                     set
                     {
                         if (HasValue != true)
+                        {
                             coordvalue = value;
+                            HasValue = true;
+                        }
                     }
                 }
             }
@@ -190,7 +206,8 @@ namespace ConsoleApp
                     case ConsoleKey.DownArrow:
                         if (PlayingField.GetActiveCoordinate().Item1 != 2)
                             PlayingField.SetActiveCoordinate(ActiveCoordinate.Item1 + 1, ActiveCoordinate.Item2); break;
-                    case ConsoleKey.Enter: CurrentPlayer.ChangePlayer(); break;
+                    case ConsoleKey.Enter: 
+                        if (PlayingField.MarkCoordinate(CurrentPlayer.PlayerValue)) CurrentPlayer.ChangePlayer(); break;
                 }
                 ActiveCoordinate = PlayingField.GetActiveCoordinate();
             }
