@@ -5,6 +5,7 @@ using System.Text;
 
 namespace ConsoleApp
 {
+    //Тестовый комментарий
     public static class NoughtsAndCrosses
     {
         struct Field
